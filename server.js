@@ -41,8 +41,8 @@ app.post('/upload',function(req,res){
         res.send("file is uploaded");
     });
 });
-
-var server = app.listen(3000,function(){
+const port = process.env.PORT || 3000;
+var server = app.listen(port,function(){
 
    console.log('listening on port 3000'); 
 });

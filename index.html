@@ -1,0 +1,117 @@
+<html>
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <title>Leaderboard</title>
+</head>
+<style>
+tr{
+    
+}
+table{
+    border: 1px solid black;
+}
+
+</style>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="/">Upload</a>
+        <a class="navbar-brand" href="/view">View</a>
+      </nav>      
+    <div class="container">
+        <div class="jumbotron">
+            <img src="logo.png" height="100px" width="100px">
+            <h1 style="text-align: center;">Ludo Tournament Entry Field</h1>
+        </div>    
+    </div>
+    
+    <form class="form-group" id='excelupload' style="text-align: center;" enctype="multipart/form-data" action="/upload" method="post">
+        <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Upload</span>
+            </div>
+            <div class="custom-file">
+              <input type="file" class="custom-file-input" id="excelsheet" name='file'>
+              <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+            </div>
+          </div><br>            
+        <input type="button" class = "btn btn-primary"  id="submit" value="Submit ">
+    </form>
+    <div id = "display"></div>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.2/xlsx.full.min.js"></script>
+    <script>
+        document.onload = function(){
+            //console.log('entered');     
+        }
+        function generateTable(XL_row_object)
+        {
+            var htmlresponse = "<table class = 'table'>"
+            var keys = Object.keys(XL_row_object[0])
+            //console.log(keys);
+            htmlresponse += "<thead class ='thead-dark'><tr>"
+            for(var key of keys){
+                htmlresponse += "<th>" + key + "</th>";
+            }
+            htmlresponse+= "</tr></thead><tbody>";
+            for(var i = 0; i<XL_row_object.length;i++){
+                var obj = XL_row_object[i];
+                htmlresponse+= "<tr>";
+                for(var key in obj){
+                    htmlresponse+= "<td>" + obj[key] + "</td>"
+                }
+                htmlresponse+= "</tr>" 
+                
+            }
+            htmlresponse+="</tbody></table>"
+            return htmlresponse;
+        }
+        function SubmitData(e){
+            document.getElementById('display').innerHTML = "";
+            console.log('herre');
+            //e.preventDefault();
+            //alert('correct passcode');
+            //console.log($('#excelsheet'));
+            var reader = new FileReader();
+            var file = document.getElementById('excelsheet').files[0];
+            reader.onload = function(e){
+                var data = e.target.result;
+                var wb = XLSX.read(data,{type:'binary'});
+                wb.SheetNames.forEach(function(sheetName){
+                    var XL_row_object = XLSX.utils.sheet_to_row_object_array(wb.Sheets[sheetName]);
+                    var json_object  = JSON.stringify(XL_row_object);
+                    //console.log(json_object);
+                    var html  = generateTable(XL_row_object);
+                    //console.log(html);
+                    document.getElementById('display').innerHTML = html;
+                });
+                
+            }
+            reader.onerror = function(event) {
+                      console.error("File could not be read! Code " + event.target.error.code);
+                    };
+
+            reader.readAsBinaryString(file);
+        }
+        $('#submit').on('click',function(){
+            var form = $('#excelupload')[0];
+            var data = new FormData(form);
+
+            $.ajax({
+                url: '/upload',
+                data: data,
+                cache: false,
+                contentType: false,
+                processData: false,
+                type: 'POST',
+                success: function(data){
+                    alert(data);
+            }
+        });
+
+        });
+
+    </script>
+</body>
+</html>
